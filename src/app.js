@@ -2,8 +2,10 @@ const express = require("express");
 const app = express();
 const PORT = 3000;
 
-app.get("/profile", (req, res) => {
-  res.send({ username: "nabeel", job: "developer" });
+app.get("/profile/:userId/:user/:password", (req, res) => {
+  console.log(req.params.userId);
+  const userDetails = req.params;
+  res.send(userDetails);
 });
 
 app.post("/profile", (req, res) => {
@@ -15,9 +17,7 @@ app.delete("/profile", (req, res) => {
 });
 
 app.patch("/profile", (req, res) => {
-    res.send("profile updated successfully")
-})
-
-
+  res.send("profile updated successfully");
+});
 
 app.listen(PORT, () => console.log(`listening on ${PORT}`));
