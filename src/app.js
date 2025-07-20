@@ -1,17 +1,23 @@
 const express = require("express");
 const app = express();
-const PORT = 3000
+const PORT = 3000;
 
-app.use("/test", (req,res) => {
-    res.send("testing hello")
+app.get("/profile", (req, res) => {
+  res.send({ username: "nabeel", job: "developer" });
+});
+
+app.post("/profile", (req, res) => {
+  res.send("profile fetched successfully");
+});
+
+app.delete("/profile", (req, res) => {
+  res.send("profile deleted successfully");
+});
+
+app.patch("/profile", (req, res) => {
+    res.send("profile updated successfully")
 })
 
-app.use("/hello", (req, res) => {
-    res.send("Hello World from admi")
-})
 
-app.get('/getthat', (req,res) => {
-    res.send('<h1>HELLO GET IT NOW </h1>')
-})
 
 app.listen(PORT, () => console.log(`listening on ${PORT}`));
