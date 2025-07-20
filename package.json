@@ -1,0 +1,15 @@
+{
+  "name": "devconnect",
+  "version": "1.0.0",
+  "description": "Platform for web developers to connect each other",
+  "main": "index.js",
+  "scripts": {
+    "start": "node src/app.js",
+    "dev": "nodemon src/app.js"
+  },
+  "author": "Nabeel Nizar",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^5.1.0"
+  }
+}
