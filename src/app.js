@@ -1,23 +1,23 @@
 const express = require("express");
 const app = express();
 const PORT = 3000;
+const { isAdminAuth } = require("./middlewares/auth");
 
-app.get("/profile/:userId/:user/:password", (req, res) => {
-  console.log(req.params.userId);
-  const userDetails = req.params;
-  res.send(userDetails);
+app.use("/admin", isAdminAuth);
+
+app.get("/admin/getAllUsers", (req, res) => {
+  try {
+    throw new Error("err");
+  } catch (error) {
+    res.status(500).send("Error");
+  }
+  res.send("data send");
 });
 
-app.post("/profile", (req, res) => {
-  res.send("profile fetched successfully");
-});
-
-app.delete("/profile", (req, res) => {
-  res.send("profile deleted successfully");
-});
-
-app.patch("/profile", (req, res) => {
-  res.send("profile updated successfully");
+app.use("/", (err, req, res, next) => {
+  if (err) {
+    res.status(500).send("Something went wrong");
+  }
 });
 
 app.listen(PORT, () => console.log(`listening on ${PORT}`));
