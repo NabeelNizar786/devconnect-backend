@@ -7,13 +7,34 @@ const PORT = 3000;
 app.use(express.json());
 
 app.post("/signup", async (req, res) => {
-  const user = new User(req.body);
-
   try {
+    const data = req.body;
+    const ALLOWED_UPDATES = [
+      "firstName",
+      "lastName",
+      "emailId",
+      "password",
+      "photoUrl",
+      "about",
+      "gender",
+      "age",
+      "skills",
+    ];
+    const isUpdateAllowed = Object.keys(data).every((k) =>
+      ALLOWED_UPDATES.includes(k)
+    );
+    if (!isUpdateAllowed) {
+      throw new Error("Update not allowed");
+    }
+    if(data.skills?.length > 5){
+      throw new Error("skills must be fewer or equal to 5");
+    }
+    const user = new User(data);
     let result = await user.save();
     res.status(200).send({ message: "User Added Successfully", result });
   } catch (err) {
-    res.status(404).send("Error While Creating User");
+    let error = err.message;
+    res.status(404).send({ message: "Error While Creating User", error });
   }
 });
 
@@ -22,7 +43,7 @@ app.get("/user", async (req, res) => {
 
   try {
     const user = await User.findOne({ emailId: userEmail });
-    console.log(user)
+    console.log(user);
 
     if (user.length === 0) {
       res.status(404).send({ message: "User Not Found!" });
@@ -42,27 +63,49 @@ app.get("/feed", async (req, res) => {
   }
 });
 
-app.delete("/delete", async(req,res) => {
-  const userId = req.body.userId
+app.delete("/delete", async (req, res) => {
+  const userId = req.body.userId;
   try {
-    let result = await User.findByIdAndDelete(userId)
-    res.status(200).send({message:"User Successfully Deleted!"}, result)
+    let result = await User.findByIdAndDelete(userId);
+    res.status(200).send({ message: "User Successfully Deleted!" }, result);
   } catch (error) {
-    res.status(500).send("Error while deleting user")
+    res.status(500).send({ message: "Error while deleting user", error });
   }
-})
+});
 
-app.patch("/update", async(req,res) => {
-  const userId = req.body.userId
-  const data = req.body
+app.patch("/update/:userId", async (req, res) => {
+  const userId = req.params.userId;
+  const data = req.body;
 
   try {
-    let result = await User.findByIdAndUpdate({_id: userId}, data, {returnDocument: "before"})
-    res.status(200).send({message:"User successfully updated!", result})
-  } catch (error) {
-    res.status(500).send("Error while Updating user");
+    const ALLOWED_UPDATES = [
+      "password",
+      "photoUrl",
+      "about",
+      "gender",
+      "age",
+      "skills",
+    ];
+    const isUpdateAllowed = Object.keys(data).every((k) =>
+      ALLOWED_UPDATES.includes(k)
+    );
+    if (!isUpdateAllowed) {
+      throw new Error("Update not allowed");
+    }
+
+    if (req.body?.skills.length > 5) {
+      throw new Error("skills must be fewer or equal to 5");
+    }
+    let result = await User.findByIdAndUpdate({ _id: userId }, data, {
+      returnDocument: "before",
+      runValidators: true,
+    });
+    res.status(200).send({ message: "User successfully updated!", result });
+  } catch (err) {
+    let error = err.message;
+    res.status(500).send({ message: "Error while Updating user", error });
   }
-})
+});
 
 connectDB()
   .then(() => {
