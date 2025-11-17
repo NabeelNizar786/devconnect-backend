@@ -1,35 +1,29 @@
 const express = require("express");
 const connectDB = require("./config/database");
 const User = require("./models/user");
+const { validateSignUpData } = require("./utils/validation");
+const bcrypt = require("bcrypt");
 const app = express();
 const PORT = 3000;
 
 app.use(express.json());
 
-app.post("/signup", async (req, res) => {
+app.post("/signup", async (req, res) => { 
   try {
-    const data = req.body;
-    const ALLOWED_UPDATES = [
-      "firstName",
-      "lastName",
-      "emailId",
-      "password",
-      "photoUrl",
-      "about",
-      "gender",
-      "age",
-      "skills",
-    ];
-    const isUpdateAllowed = Object.keys(data).every((k) =>
-      ALLOWED_UPDATES.includes(k)
-    );
-    if (!isUpdateAllowed) {
-      throw new Error("Update not allowed");
-    }
-    if(data.skills?.length > 5){
-      throw new Error("skills must be fewer or equal to 5");
-    }
-    const user = new User(data);
+    //Validation of data
+    validateSignUpData(req);
+
+    const{firstName, lastName, emailId, password} = req.body
+
+    // if (skills?.length > 5) {
+    //   throw new Error("skills must be fewer or equal to 5");
+    // }
+
+    //encrypting password
+    const passwordHash = await bcrypt.hash(password, 10);
+    console.log(passwordHash);
+
+    const user = new User({firstName, lastName, emailId, password:passwordHash});
     let result = await user.save();
     res.status(200).send({ message: "User Added Successfully", result });
   } catch (err) {
@@ -37,6 +31,28 @@ app.post("/signup", async (req, res) => {
     res.status(404).send({ message: "Error While Creating User", error });
   }
 });
+
+app.post("/login", async (req, res) => {
+  try {
+    const {emailId, password} = req.body;
+
+    const user = await User.findOne({emailId: emailId})
+
+    if(!user) {
+      throw new Error("EmailID doesn't exist!")
+    }
+
+    const isPasswordValid = await bcrypt.compare(password, user.password)
+
+    if( isPasswordValid) {
+      res.status(200).send("Login Successful!")
+    } else {
+      throw new Error("Incorrect Password!")
+    }
+  } catch (error) {
+    res.status(400).send("ERROR:" + error.message)
+  }
+})
 
 app.get("/user", async (req, res) => {
   const userEmail = req.body.emailId;
