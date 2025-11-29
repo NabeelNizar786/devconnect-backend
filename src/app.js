@@ -1,11 +1,6 @@
 const express = require("express");
 const connectDB = require("./config/database");
-const User = require("./models/user");
-const { validateSignUpData } = require("./utils/validation");
-const bcrypt = require("bcrypt");
 const cookieParser = require("cookie-parser");
-const jwt = require("jsonwebtoken");
-const { userAuth } = require("./middlewares/auth");
 
 const app = express();
 const PORT = 3000;
@@ -13,76 +8,13 @@ const PORT = 3000;
 app.use(express.json());
 app.use(cookieParser());
 
-app.post("/signup", async (req, res) => {
-  try {
-    //Validation of data
-    validateSignUpData(req);
+const authRouter = require("./routes/auth");
+const profileRouter = require("./routes/profile");
+const requestRouter = require("./routes/requests");
 
-    const { firstName, lastName, emailId, password } = req.body;
-
-    // if (skills?.length > 5) {
-    //   throw new Error("skills must be fewer or equal to 5");
-    // }
-
-    //encrypting password
-    const passwordHash = await bcrypt.hash(password, 10);
-    console.log(passwordHash);
-
-    const user = new User({
-      firstName,
-      lastName,
-      emailId,
-      password: passwordHash,
-    });
-    let result = await user.save();
-    res.status(200).send({ message: "User Added Successfully", result });
-  } catch (err) {
-    let error = err.message;
-    res.status(404).send({ message: "Error While Creating User", error });
-  }
-});
-
-app.post("/login", async (req, res) => {
-  try {
-    const { emailId, password } = req.body;
-
-    const user = await User.findOne({ emailId: emailId });
-
-    if (!user) {
-      throw new Error("EmailID doesn't exist!");
-    }
-
-    const isPasswordValid = await user.validatePassword(password)
-
-    if (isPasswordValid) {
-      const token = await user.getJwt()
-
-      res.cookie("token", token, {expires: new Date(Date.now() + 2*60*1000)});
-      res.status(200).send("Login Successful!");
-    } else {
-      throw new Error("Incorrect Password!");
-    }
-  } catch (error) {
-    res.status(400).send("ERROR:" + error.message);
-  }
-});
-
-app.get("/profile", userAuth, async (req, res) => {
-  try {
-    let userInfo = req.user;
-    res.status(200).send(userInfo);
-  } catch (error) {
-    res.status(400).send("ERROR:" + error.message);
-  }
-});
-
-app.post("/sendConnectionRequest", userAuth, async (req, res) => {
-  try {
-    res.status(200).send("request sent successful!");
-  } catch (error) {
-    res.status(400).send("ERROR:" + error.message);
-  }
-});
+app.use("/", authRouter),
+  app.use("/", profileRouter),
+  app.use("/", requestRouter);
 
 app.get("/user", async (req, res) => {
   const userEmail = req.body.emailId;
