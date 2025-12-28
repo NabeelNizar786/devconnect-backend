@@ -1,10 +1,19 @@
 const express = require("express");
 const connectDB = require("./config/database");
 const cookieParser = require("cookie-parser");
+const cors = require("cors");
 
 const app = express();
 const PORT = 3000;
 
+require('dotenv').config()
+
+app.use(
+  cors({
+    origin: "http://localhost:5173",
+    credentials: true,
+  })
+);
 app.use(express.json());
 app.use(cookieParser());
 
@@ -16,14 +25,13 @@ const userRouter = require("./routes/user");
 app.use("/", authRouter),
   app.use("/", profileRouter),
   app.use("/", requestRouter);
-  app.use("/", userRouter);
+app.use("/", userRouter);
 
 app.get("/user", async (req, res) => {
   const userEmail = req.body.emailId;
 
   try {
     const user = await User.findOne({ emailId: userEmail });
-    console.log(user);
 
     if (user.length === 0) {
       res.status(404).send({ message: "User Not Found!" });
@@ -90,7 +98,7 @@ app.patch("/update/:userId", async (req, res) => {
 connectDB()
   .then(() => {
     console.log("Database Connection Established ...!");
-    app.listen(PORT, () => {
+    app.listen(process.env.PORT || PORT, () => {
       console.log("Server Connection Started Succesfully");
     });
   })

@@ -17,7 +17,6 @@ authRouter.post("/signup", async (req, res) => {
 
     //encrypting password
     const passwordHash = await bcrypt.hash(password, 10);
-    console.log(passwordHash);
 
     const user = new User({
       firstName,
@@ -25,8 +24,14 @@ authRouter.post("/signup", async (req, res) => {
       emailId,
       password: passwordHash,
     });
-    let result = await user.save();
-    res.status(200).send({ message: "User Added Successfully", result });
+    let savedUser = await user.save();
+    const token = await savedUser.getJwt();
+
+    res.cookie("token", token, {
+      expires: new Date(Date.now() + 24 * 60 * 60 * 1000),
+    });
+
+    res.status(200).json({ savedUser, message: "User Added Successfully" });
   } catch (err) {
     let error = err.message;
     res.status(404).send({ message: "Error While Creating User", error });
@@ -49,9 +54,9 @@ authRouter.post("/login", async (req, res) => {
       const token = await user.getJwt();
 
       res.cookie("token", token, {
-        expires: new Date(Date.now() + 2 * 60 * 1000),
+        expires: new Date(Date.now() + 24 * 60 * 60 * 1000),
       });
-      res.status(200).send("Login Successful!");
+      res.status(200).json(user);
     } else {
       throw new Error("Incorrect Password!");
     }
@@ -61,8 +66,8 @@ authRouter.post("/login", async (req, res) => {
 });
 
 authRouter.post("/logout", async (req, res) => {
-    res.clearCookie("token", { path: "/" });
-    res.status(200).send("User Logout Successfull!")
-})
+  res.clearCookie("token", { path: "/" });
+  res.status(200).send("User Logout Successfull!");
+});
 
-module.exports = authRouter
+module.exports = authRouter;
