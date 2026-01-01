@@ -18,7 +18,22 @@ jobs:
           key: ${{ secrets.EC2_KEY }}
           script: |
             set -e
+
+            # Load nvm so node and npm are available
+            export NVM_DIR="$HOME/.nvm"
+            [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+
+            # Go to your backend folder
             cd /home/ubuntu/devconnect-backend
+
+            # Pull latest code from dev branch
             git pull origin dev
+
+            # Install any new dependencies
             npm install
+
+            # Build the project (if you have a build script)
+            npm run build
+
+            # Reload PM2 app (zero downtime)
             pm2 reload devConnect
