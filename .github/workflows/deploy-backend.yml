@@ -32,8 +32,5 @@ jobs:
             # Install any new dependencies
             npm install
 
-            # Build the project (if you have a build script)
-            npm run build
-
             # Reload PM2 app (zero downtime)
             pm2 reload devConnect
